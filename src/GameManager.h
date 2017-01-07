@@ -1,18 +1,18 @@
 #pragma once
 #include "CardDealer.h"
 #include "Player.h"
+#include "Board.h"
 
 class GameManager
 {
 public:
-	GameManager();
+	GameManager(unsigned int seed);
 	~GameManager();
 
-	void InitGame();
+	void InitGame(unsigned int seed);
 	
 	Player* GetPlayer1();
 	Player* GetPlayer2();
-
 
 private:
 
@@ -23,7 +23,10 @@ private:
 	Player* _player1;
 	Player* _player2;
 
-	int nbOfCards = 40;
+	Board* _player1Board;
+	Board* _player2Board;
+
+	int _nbOfCards;
 
 };
 

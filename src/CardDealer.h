@@ -17,7 +17,7 @@ public:
 
 	void CreateCards(int nbToCreate, unsigned int seed);
 
-	void DealACard(Player* player);
+	void DealACard(Player* player, Player* player2);
 
 private:
 	std::vector<Card*>* _cards;

@@ -18,7 +18,7 @@ CardDealer::~CardDealer()
 void CardDealer::CreateCards(int nbToCreate, unsigned int seed)
 {
 	std::srand(seed); //use current time as seed for random generator
-	for (auto i = 0; i < nbToCreate *2; ++i)
+	for (auto i = 0; i < nbToCreate; ++i)
 	{
 		int randAttack = std::rand() % (_attackMax + 1);
 		int randDefense = std::rand() % (_defenseMax + 1);
@@ -27,8 +27,9 @@ void CardDealer::CreateCards(int nbToCreate, unsigned int seed)
 	}
 }
 
-void CardDealer::DealACard(Player* player)
+void CardDealer::DealACard(Player* player, Player* player2)
 {
 	player->AddCard(_cards->back());
+	player2->AddCard(_cards->back());
 	_cards->pop_back();
 }

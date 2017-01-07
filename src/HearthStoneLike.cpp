@@ -8,12 +8,12 @@
 int main()
 {
 
-	GameManager* _gameManager = new GameManager();
+	/*GameManager* _gameManager = new GameManager();
 
 	_gameManager->GetPlayer1()->PrintDeck();
 	_gameManager->GetPlayer2()->PrintDeck();
 
 	system("pause");
-    return 0;
+    return 0;*/
 }
 

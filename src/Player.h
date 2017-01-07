@@ -15,6 +15,9 @@ public:
 	void PickCard();
 
 	void PrintDeck();
+	void PrintHand();
+
+	Card* ChooseCard(int cardNumberinHand);
 
 private:
 	std::vector<Card*> _deck;

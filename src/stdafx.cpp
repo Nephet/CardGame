@@ -1,5 +1,5 @@
 // stdafx.cpp : source file that includes just the standard includes
-// HearthStoneLike.pch will be the pre-compiled header
+// Sample_04_Cardgame_Client_cpp.pch will be the pre-compiled header
 // stdafx.obj will contain the pre-compiled type information
 
 #include "stdafx.h"
