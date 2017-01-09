@@ -29,7 +29,7 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 int main(int argc, char *argv[])
 {
 	GameManager* gameManager;
-	std::string login = "Nephet";
+	std::string login = "antoinusitos";
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);

@@ -5,7 +5,7 @@
 #include "GameManager.h"
 
 
-int main()
+/*int main()
 {
 
 	/*GameManager* _gameManager = new GameManager();
@@ -14,6 +14,6 @@ int main()
 	_gameManager->GetPlayer2()->PrintDeck();
 
 	system("pause");
-    return 0;*/
-}
+    return 0;
+}*/
 
