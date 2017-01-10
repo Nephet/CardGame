@@ -6,13 +6,17 @@
 class GameManager
 {
 public:
-	GameManager(unsigned int seed);
+	GameManager();
 	~GameManager();
+
+	void Init(unsigned int seed);
 
 	void InitGame(unsigned int seed);
 	
 	Player* GetPlayer1();
 	Player* GetPlayer2();
+
+	int SelectPlayer(std::string id);
 
 private:
 

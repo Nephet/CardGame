@@ -10,17 +10,36 @@
 #include <ctime>
 
 #include "GameManager.h"
+#include "Card.h"
 
+// send transaction on the server
 int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameManager)
 {
 	if (t.cmd == "start")
 	{
 		gameState = t.json_args()[L"seed"].as_integer();
-		gameManager = new GameManager(gameState);
+		gameManager->Init(gameState);
 	}
 	else if (t.cmd == "add")
 	{
 		gameState += t.json_args()[L"value"].as_integer();
+	}
+	else if (t.cmd == "play")
+	{
+		int choice = t.json_args()[L"value"].as_integer();
+		auto card = gameManager->GetPlayer1()->ChooseCard(choice);
+	}
+	else if (t.cmd == "pick")
+	{
+		gameManager->GetPlayer1()->PickCard();
+	}
+	else if (t.cmd == "ChooseP1")
+	{
+		gameManager->GetPlayer1()->InitPlayer("taken");
+	}
+	else if (t.cmd == "ChooseP2")
+	{
+		gameManager->GetPlayer2()->InitPlayer("taken");
 	}
 	return gameState;
 }
@@ -29,7 +48,9 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 int main(int argc, char *argv[])
 {
 	GameManager* gameManager;
-	std::string login = "antoinusitos";
+	gameManager = new GameManager();
+
+	std::string login = "a";
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);
@@ -134,18 +155,35 @@ int main(int argc, char *argv[])
 
 	gameSession->connect().get();//Connect to the game session
 
-
-	
-
-
 	gameSession->ready();//Inform the server we are ready to play
 	gameSession->waitServerReady().get();//
 	std::cout << "CONNECTED" << std::endl;
 
+	/*int nb = gameManager->SelectPlayer(auth->userId());
+
+	try
+	{
+		if (nb == 1)
+		{
+			auto t = transactionBroker->submitTransaction(auth->userId(), "ChooseP1", 0);
+			t.get();
+		}
+		else
+		{
+			auto t = transactionBroker->submitTransaction(auth->userId(), "ChooseP2", 0);
+			t.get();
+		}
+	}
+	catch (std::exception& ex)
+	{
+		std::cout << ex.what();
+	}*/
+
 	int n;
 	while (running)
 	{
-		std::cout << "Enter number to add to game state." << std::endl;
+		// **** original code ****
+		/*std::cout << "Enter number to add to game state." << std::endl;
 		std::cin >> n;
 		auto json = web::json::value();
 		json[L"value"] = n;
@@ -157,7 +195,33 @@ int main(int argc, char *argv[])
 		catch(std::exception& ex)
 		{
 			std::cout << ex.what();
+		}*/
+		// **** original code ****
+
+		std::cout << "Current Hand :" << std::endl;
+		gameManager->GetPlayer1()->PrintHand();
+
+		std::cout << "Enter number to play a card." << std::endl;
+		std::cin >> n;
+
+		auto json = web::json::value();
+		json[L"value"] = n;
+
+		try
+		{
+			auto t = transactionBroker->submitTransaction(auth->userId(), "play", json);
+			t.get();
 		}
+		catch (std::exception& ex)
+		{
+			std::cout << ex.what();
+		}
+		
+		std::cout << "Player 1 Hand :" << std::endl;
+		gameManager->GetPlayer1()->PrintHand();
+		
+		std::cout << "Player 2 Hand :" << std::endl;
+		gameManager->GetPlayer2()->PrintHand();
 	}
 
 	std::cout << "disconnecting...";

@@ -11,6 +11,10 @@ public:
 	Player();
 	~Player();
 
+	std::string GetPlayerID();
+
+	void InitPlayer(std::string id);
+
 	void AddCard(Card* card);
 	void PickCard();
 
@@ -22,5 +26,7 @@ public:
 private:
 	std::vector<Card*> _deck;
 	std::vector<Card*> _hand;
+
+	std::string _playerID;
 };
 

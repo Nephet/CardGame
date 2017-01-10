@@ -4,11 +4,21 @@
 
 Player::Player()
 {
+	_playerID = "NONE";
 }
-
 
 Player::~Player()
 {
+}
+
+void Player::InitPlayer(std::string id)
+{
+	_playerID = id;
+}
+
+std::string Player::GetPlayerID()
+{
+	return _playerID;
 }
 
 void Player::AddCard(Card * card)

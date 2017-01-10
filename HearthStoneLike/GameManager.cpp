@@ -2,10 +2,20 @@
 #include "GameManager.h"
 
 
-GameManager::GameManager(unsigned int seed)
+GameManager::GameManager()
 {
 	_nbOfCards = 20;
 	
+	
+}
+
+GameManager::~GameManager()
+{
+
+}
+
+void GameManager::Init(unsigned int seed)
+{
 	InitGame(seed);
 	DealCards();
 
@@ -18,9 +28,20 @@ GameManager::GameManager(unsigned int seed)
 	_player2->PrintHand();
 }
 
-
-GameManager::~GameManager()
+int GameManager::SelectPlayer(std::string id)
 {
+	if (_player1->GetPlayerID() == "NONE")
+	{
+		std::cout << "USE PLAYER 1" << std::endl;
+		_player1->InitPlayer(id);
+		return 1;
+	}
+	else
+	{
+		std::cout << "USE PLAYER 2" << std::endl;
+		_player2->InitPlayer(id);
+		return 2;
+	}
 }
 
 void GameManager::InitGame(unsigned int seed)
