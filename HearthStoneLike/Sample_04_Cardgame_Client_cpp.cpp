@@ -27,19 +27,23 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 	else if (t.cmd == "play")
 	{
 		int choice = t.json_args()[L"value"].as_integer();
-		auto card = gameManager->GetPlayer1()->ChooseCard(choice);
+		int player = t.json_args()[L"player"].as_integer();
+		if (player == 1)
+			gameManager->GetPlayer1()->ChooseCard(choice);
+		else
+			gameManager->GetPlayer2()->ChooseCard(choice);
 	}
 	else if (t.cmd == "pick")
 	{
-		gameManager->GetPlayer1()->PickCard();
+		int player = t.json_args()[L"player"].as_integer();
+		if(player == 1)
+			gameManager->GetPlayer1()->PickCard();
+		else
+			gameManager->GetPlayer2()->PickCard();
 	}
-	else if (t.cmd == "ChooseP1")
+	else if (t.cmd == "endOfTurn")
 	{
-		gameManager->GetPlayer1()->InitPlayer("taken");
-	}
-	else if (t.cmd == "ChooseP2")
-	{
-		gameManager->GetPlayer2()->InitPlayer("taken");
+		gameManager->EndOfTurn();
 	}
 	return gameState;
 }
@@ -50,7 +54,7 @@ int main(int argc, char *argv[])
 	GameManager* gameManager;
 	gameManager = new GameManager();
 
-	std::string login = "a";
+	std::string login = "b";
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);
@@ -159,27 +163,14 @@ int main(int argc, char *argv[])
 	gameSession->waitServerReady().get();//
 	std::cout << "CONNECTED" << std::endl;
 
-	/*int nb = gameManager->SelectPlayer(auth->userId());
+	bool thePlayer = login == "a" ? true : false;
 
-	try
-	{
-		if (nb == 1)
-		{
-			auto t = transactionBroker->submitTransaction(auth->userId(), "ChooseP1", 0);
-			t.get();
-		}
-		else
-		{
-			auto t = transactionBroker->submitTransaction(auth->userId(), "ChooseP2", 0);
-			t.get();
-		}
-	}
-	catch (std::exception& ex)
-	{
-		std::cout << ex.what();
-	}*/
+	gameManager->PrintHands(thePlayer);
+
+	std::cout << "waiting for the other player..." << std::endl;
 
 	int n;
+	// game loop
 	while (running)
 	{
 		// **** original code ****
@@ -198,30 +189,75 @@ int main(int argc, char *argv[])
 		}*/
 		// **** original code ****
 
-		std::cout << "Current Hand :" << std::endl;
-		gameManager->GetPlayer1()->PrintHand();
-
-		std::cout << "Enter number to play a card." << std::endl;
-		std::cin >> n;
-
-		auto json = web::json::value();
-		json[L"value"] = n;
-
-		try
+		if (gameManager->GetPlayerTurn() == thePlayer)
 		{
-			auto t = transactionBroker->submitTransaction(auth->userId(), "play", json);
-			t.get();
+
+			std::cout << "-------------------------------------------" << std::endl;
+			std::cout << "NEW TURN" << std::endl;
+			std::cout << "-------------------------------------------" << std::endl;
+
+			gameManager->PrintHands(thePlayer);
+
+			// turn loop
+			bool endOfTurn = false;
+			while (!endOfTurn)
+			{
+				std::cout << "0 - End The Turn" << std::endl;
+				std::cout << "99 - Pick a Card" << std::endl;
+				std::cout << "1..x - Play a Card" << std::endl;
+				std::cin >> n;
+
+				auto json = web::json::value();
+				json[L"player"] = (int)thePlayer;
+				json[L"value"] = n;
+
+				if (n == 0)
+				{
+					try
+					{
+						auto t = transactionBroker->submitTransaction(auth->userId(), "endOfTurn", json);
+						t.get();
+					}
+					catch (std::exception& ex)
+					{
+						std::cout << ex.what();
+					}
+					endOfTurn = true;
+					std::cout << "-------------------------------------------" << std::endl;
+					std::cout << "END OF TURN" << std::endl;
+					std::cout << "-------------------------------------------" << std::endl;
+				}
+				else if (n == 99)
+				{
+					try
+					{
+						auto t = transactionBroker->submitTransaction(auth->userId(), "pick", json);
+						t.get();
+					}
+					catch (std::exception& ex)
+					{
+						std::cout << ex.what();
+					}
+				}
+				else
+				{
+					try
+					{
+						auto t = transactionBroker->submitTransaction(auth->userId(), "play", json);
+						t.get();
+					}
+					catch (std::exception& ex)
+					{
+						std::cout << ex.what();
+					}
+				}
+
+				gameManager->PrintHands(thePlayer);
+			}
+
+			std::cout << "waiting for the other player..." << std::endl;
+
 		}
-		catch (std::exception& ex)
-		{
-			std::cout << ex.what();
-		}
-		
-		std::cout << "Player 1 Hand :" << std::endl;
-		gameManager->GetPlayer1()->PrintHand();
-		
-		std::cout << "Player 2 Hand :" << std::endl;
-		gameManager->GetPlayer2()->PrintHand();
 	}
 
 	std::cout << "disconnecting...";

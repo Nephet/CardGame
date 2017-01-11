@@ -37,7 +37,6 @@ void Player::PickCard()
 
 void Player::PrintDeck()
 {
-	std::cout << "New Deck : " << std::endl;
 	for each (Card* card in _deck)
 	{
 		card->ToString();
@@ -46,11 +45,10 @@ void Player::PrintDeck()
 
 void Player::PrintHand()
 {
-	std::cout << "Player Hand : " << std::endl;
 	int index = 1;
 	for each (Card* card in _hand)
 	{
-		std::cout << index;
+		std::cout << index << " - ";
 		card->ToString();
 		index++;
 	}
@@ -60,7 +58,11 @@ Card* Player::ChooseCard(int cardNumberinHand)
 {
 	if (_hand.size() >= cardNumberinHand)
 	{
-		return _hand[cardNumberinHand - 1];
+		Card* temp = _hand[cardNumberinHand - 1];
+
+		_hand.erase(_hand.begin() + (cardNumberinHand - 1));
+
+		return temp;
 	}
 	return nullptr;
 }

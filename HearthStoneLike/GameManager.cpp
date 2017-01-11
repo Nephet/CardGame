@@ -5,7 +5,7 @@
 GameManager::GameManager()
 {
 	_nbOfCards = 20;
-	
+	_player1Turn = true;
 	
 }
 
@@ -21,11 +21,6 @@ void GameManager::Init(unsigned int seed)
 
 	PickCards(_player1, 5);
 	PickCards(_player2, 5);
-
-	std::cout << "hand j1" << std::endl;
-	_player1->PrintHand();
-	std::cout << "hand j2" << std::endl;
-	_player2->PrintHand();
 }
 
 int GameManager::SelectPlayer(std::string id)
@@ -42,6 +37,41 @@ int GameManager::SelectPlayer(std::string id)
 		_player2->InitPlayer(id);
 		return 2;
 	}
+}
+
+bool GameManager::GetPlayerTurn()
+{
+	return _player1Turn;
+}
+
+void GameManager::EndOfTurn()
+{
+	_player1Turn = !_player1Turn;
+}
+
+void GameManager::PrintHands(bool thePlayer)
+{
+	std::cout << "-------------------------------------------" << std::endl;
+	std::cout << "CARDS" << std::endl;
+	std::cout << "-------------------------------------------" << std::endl;
+	if (thePlayer)
+	{
+		std::cout << "Current Hand :" << std::endl;
+		GetPlayer1()->PrintHand();
+		std::cout << "Enemy Hand :" << std::endl;
+		GetPlayer2()->PrintHand();
+		std::cout << std::endl;
+	}
+	else
+	{
+		std::cout << "Current Hand :" << std::endl;
+		GetPlayer2()->PrintHand();
+		std::cout << "Enemy Hand :" << std::endl;
+		GetPlayer1()->PrintHand();
+		std::cout << std::endl;
+	}
+	std::cout << "-------------------------------------------" << std::endl;
+	std::cout << "-------------------------------------------" << std::endl;
 }
 
 void GameManager::InitGame(unsigned int seed)
