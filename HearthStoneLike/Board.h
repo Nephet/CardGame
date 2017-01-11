@@ -13,6 +13,8 @@ public:
 	int GetNbCardsOnBoard();
 	bool IsFree();
 	void PutCard(Card* theCard);
+	Card* GetCard(int index);
+	void RemoveCard(int index);
 
 private:
 	std::vector<Card*> _currentCards;

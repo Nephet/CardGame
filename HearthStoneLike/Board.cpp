@@ -39,3 +39,13 @@ void Board::PutCard(Card* theCard)
 {
 	_currentCards.push_back(theCard);
 }
+
+Card* Board::GetCard(int index)
+{
+	return _currentCards.at(index - 1);
+}
+
+void Board::RemoveCard(int index)
+{
+	_currentCards.erase(_currentCards.begin() + (index - 1));
+}

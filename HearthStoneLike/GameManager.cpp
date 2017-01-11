@@ -124,6 +124,32 @@ void GameManager::PrintPlayerMana(bool thePlayer)
 	}
 }
 
+void GameManager::PrintPlayerLife(bool thePlayer)
+{
+	if (thePlayer)
+	{
+		std::cout << "Life remaining : " << GetPlayer1()->GetLife() << std::endl;
+	}
+	else
+	{
+		std::cout << "Life remaining : " << GetPlayer2()->GetLife() << std::endl;
+	}
+}
+
+void GameManager::PrintPlayersLife(bool thePlayer)
+{
+	if (thePlayer)
+	{
+		std::cout << "Current Life remaining : " << GetPlayer1()->GetLife() << std::endl;
+		std::cout << "Enemy Life remaining : " << GetPlayer2()->GetLife() << std::endl;
+	}
+	else
+	{
+		std::cout << "CurrentLife remaining : " << GetPlayer2()->GetLife() << std::endl;
+		std::cout << "Enemy Life remaining : " << GetPlayer1()->GetLife() << std::endl;
+	}
+}
+
 void GameManager::InitGame(unsigned int seed)
 {
 	_cardDealer = new CardDealer();
@@ -137,14 +163,24 @@ void GameManager::InitGame(unsigned int seed)
 
 }
 
-Player * GameManager::GetPlayer1()
+Player* GameManager::GetPlayer1()
 {
 	return _player1;
 }
 
-Player * GameManager::GetPlayer2()
+Player* GameManager::GetPlayer2()
 {
 	return _player2;
+}
+
+Board* GameManager::GetPlayer1Board()
+{
+	return _player1Board;
+}
+
+Board* GameManager::GetPlayer2Board()
+{
+	return _player2Board;
 }
 
 void GameManager::DealCards()
@@ -223,5 +259,48 @@ void GameManager::GivePlayerMana()
 	else
 	{
 		GetPlayer2()->RefillMana(_nbTurn * 3);
+	}
+}
+
+void GameManager::AttackCard(bool thePlayer, Card* theAttackingCard, int attackedCardIndex)
+{
+	if (thePlayer)
+	{
+		Card* card = _player2Board->GetCard(attackedCardIndex);
+		bool isDead = card->TakeDamage(theAttackingCard->GetAttack());
+		if (isDead)
+		{
+			_player2Board->RemoveCard(attackedCardIndex);
+		}
+	}
+	else
+	{
+		Card* card = _player1Board->GetCard(attackedCardIndex);
+		bool isDead = card->TakeDamage(theAttackingCard->GetAttack());
+		if (isDead)
+		{
+			_player1Board->RemoveCard(attackedCardIndex);
+		}
+	}
+}
+
+bool GameManager::CheckEndOfGame()
+{
+	if (_player1->GetLife() <= 0 || _player2->GetLife() <= 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+void GameManager::SendDamageToEnemy(bool thePlayerSender, int amount)
+{
+	if (thePlayerSender)
+	{
+		_player2->RemoveLife(amount);
+	}
+	else
+	{
+		_player1->RemoveLife(amount);
 	}
 }

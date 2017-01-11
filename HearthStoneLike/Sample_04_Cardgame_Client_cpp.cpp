@@ -12,6 +12,7 @@
 #include "GameManager.h"
 #include "Card.h"
 #include "Player.h"
+#include "Board.h"
 
 // send transaction on the server
 int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameManager)
@@ -20,14 +21,6 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 	{
 		gameState = t.json_args()[L"seed"].as_integer();
 		gameManager->Init(gameState);
-	}
-	else if (t.cmd == "add")
-	{
-		gameState += t.json_args()[L"value"].as_integer();
-	}
-	else if (t.cmd == "push")
-	{
-		int choice = t.json_args()[L"value"].as_integer();
 	}
 	else if (t.cmd == "playCard")
 	{
@@ -50,6 +43,33 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 			gameManager->GetPlayer2()->RemoveMana(mana);
 		}
 	}
+	else if (t.cmd == "AttackCard")
+	{
+		int player = t.json_args()[L"player"].as_integer();
+		int choice = t.json_args()[L"choice"].as_integer();
+		int attackCard = t.json_args()[L"attackCard"].as_integer();
+		int enemyCard = t.json_args()[L"enemyCard"].as_integer();
+
+		if (enemyCard == 0)
+		{
+			Card* card = gameManager->GetPlayer1Board()->GetCard(attackCard);
+			gameManager->SendDamageToEnemy(player, card->GetAttack());
+		}
+		else
+		{
+			if (player)
+			{
+				Card* card = gameManager->GetPlayer1Board()->GetCard(attackCard);
+				gameManager->AttackCard(player, card, enemyCard);
+			}
+			else
+			{
+				Card* card = gameManager->GetPlayer2Board()->GetCard(attackCard);
+				gameManager->AttackCard(player, card, enemyCard);
+			}
+		}
+
+	}
 	else if (t.cmd == "pick")
 	{
 		int player = t.json_args()[L"player"].as_integer();
@@ -71,7 +91,7 @@ int main(int argc, char *argv[])
 	GameManager* gameManager;
 	gameManager = new GameManager();
 
-	std::string login = "a";
+	std::string login = "b";
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);
@@ -164,7 +184,6 @@ int main(int argc, char *argv[])
 				std::cin >> v;
 				running = false;
 				break;
-
 			}
 		}
 
@@ -192,28 +211,24 @@ int main(int argc, char *argv[])
 	// game loop
 	while (running)
 	{
-		// **** original code ****
-		/*std::cout << "Enter number to add to game state." << std::endl;
-		std::cin >> n;
-		auto json = web::json::value();
-		json[L"value"] = n;
-		try
-		{
-			auto t = transactionBroker->submitTransaction(auth->userId(), "add", json);
-			t.get();
-		}
-		catch(std::exception& ex)
-		{
-			std::cout << ex.what();
-		}*/
-		// **** original code ****
-
 		if (gameManager->GetPlayerTurn() == thePlayer)
 		{
 
 			std::cout << "*******************************************" << std::endl;
 			std::cout << "NEW TURN" << std::endl;
 			std::cout << "*******************************************\n" << std::endl;
+
+			try
+			{
+				auto json = web::json::value();
+				json[L"player"] = thePlayer;
+				auto t = transactionBroker->submitTransaction(auth->userId(), "pick", json);
+				t.get();
+			}
+			catch (std::exception& ex)
+			{
+				std::cout << ex.what();
+			}
 
 			gameManager->GivePlayerMana();
 			gameManager->PrintPlayerHand(thePlayer);
@@ -225,11 +240,12 @@ int main(int argc, char *argv[])
 			{
 				bool success = false;
 
+				gameManager->PrintPlayersLife(thePlayer);
 				gameManager->PrintPlayerMana(thePlayer);
 				std::cout << std::endl;
 
 				std::cout << "0 - End The Turn" << std::endl;
-				std::cout << "99 - Pick a Card" << std::endl;
+				std::cout << "99 - Attack a Card" << std::endl;
 				std::cout << "1..x - Play a Card" << std::endl;
 				std::cin >> n;
 
@@ -237,6 +253,7 @@ int main(int argc, char *argv[])
 				json[L"player"] = thePlayer;
 				json[L"choice"] = n;
 
+				// end of turn
 				if (n == 0)
 				{
 					try
@@ -254,19 +271,119 @@ int main(int argc, char *argv[])
 					std::cout << "END OF TURN" << std::endl;
 					std::cout << "*******************************************\n" << std::endl;
 				}
+				// attack a card
 				else if (n == 99)
 				{
-					try
+					if (thePlayer)
 					{
-						auto t = transactionBroker->submitTransaction(auth->userId(), "pick", json);
-						t.get();
-						success = true;
+						if (gameManager->GetPlayer1Board()->GetNbCardsOnBoard() == 0)
+						{
+							std::cout << "no cards on the board to attack..." << std::endl;
+							success = false;
+						}
+						else
+						{
+							int cardToAttack = -1;
+							int enemyCard = -1;
+							std::cout << "Select a card to attack..." << std::endl;
+							std::cin >> cardToAttack;
+							Card* card = gameManager->GetPlayer1Board()->GetCard(cardToAttack);
+							if (card != nullptr)
+							{
+								json[L"attackCard"] = cardToAttack;
+
+								std::cout << "Select an enemy card... (0 : enemy base)" << std::endl;
+								std::cin >> enemyCard;
+
+								Card* cardEnemy = nullptr;
+
+								if(enemyCard != 0)
+									cardEnemy = gameManager->GetPlayer2Board()->GetCard(enemyCard);
+
+								if (cardEnemy != nullptr || enemyCard == 0)
+								{
+									json[L"enemyCard"] = enemyCard;
+									try
+									{
+										auto t = transactionBroker->submitTransaction(auth->userId(), "AttackCard", json);
+										t.get();
+										success = true;
+									}
+									catch (std::exception& ex)
+									{
+										std::cout << ex.what();
+										success = false;
+									}
+								}
+								else
+								{
+									std::cout << "No enemy card to attack..." << std::endl;
+									success = false;
+								}
+							}
+							else
+							{
+								std::cout << "No card to attack..." << std::endl;
+								success = false;
+							}
+						}
 					}
-					catch (std::exception& ex)
+					else
 					{
-						std::cout << ex.what();
+						if (gameManager->GetPlayer2Board()->GetNbCardsOnBoard() == 0)
+						{
+							std::cout << "no cards on the board to attack..." << std::endl;
+							success = false;
+						}
+						else
+						{
+							int cardToAttack = -1;
+							int enemyCard = -1;
+							std::cout << "Select a card to attack..." << std::endl;
+							std::cin >> cardToAttack;
+							Card* card = gameManager->GetPlayer2Board()->GetCard(cardToAttack);
+							if (card != nullptr)
+							{
+								json[L"attackCard"] = cardToAttack;
+
+								std::cout << "Select an enemy card... (0 : enemy base)" << std::endl;
+								std::cin >> enemyCard;
+
+								Card* cardEnemy = nullptr;
+
+								if (enemyCard != 0)
+									cardEnemy = gameManager->GetPlayer2Board()->GetCard(enemyCard);
+
+								if (cardEnemy != nullptr || enemyCard == 0)
+								{
+									json[L"enemyCard"] = enemyCard;
+									try
+									{
+										auto t = transactionBroker->submitTransaction(auth->userId(), "AttackCard", json);
+										t.get();
+										success = true;
+									}
+									catch (std::exception& ex)
+									{
+										std::cout << ex.what();
+										success = false;
+									}
+								}
+								else
+								{
+									std::cout << "No enemy card to attack..." << std::endl;
+									success = false;
+								}
+							}
+							else
+							{
+								std::cout << "No card to attack..." << std::endl;
+								success = false;
+							}
+						}
 					}
 				}
+				// play a card
 				else
 				{
 					bool playTheCard = gameManager->IsBoardFree(thePlayer);
@@ -316,11 +433,15 @@ int main(int argc, char *argv[])
 
 				if (success)
 				{
+					gameManager->PrintPlayersLife(thePlayer);
 					gameManager->PrintPlayerMana(thePlayer);
 					gameManager->PrintPlayerHand(thePlayer);
 					gameManager->PrintBoards(thePlayer);
 				}
 			}
+
+			if (gameManager->CheckEndOfGame())
+				running = false;
 
 			std::cout << "waiting for the other player..." << std::endl;
 

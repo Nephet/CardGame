@@ -21,3 +21,18 @@ int Card::GetManaNeeded()
 {
 	return _manaNeeded;
 }
+
+bool Card::TakeDamage(int amount)
+{
+	_defense -= amount;
+	if (_defense <= 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+int Card::GetAttack()
+{
+	return _attack;
+}

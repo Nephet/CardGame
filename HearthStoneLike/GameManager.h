@@ -16,6 +16,11 @@ public:
 	Player* GetPlayer1();
 	Player* GetPlayer2();
 
+	Board* GetPlayer1Board();
+	Board* GetPlayer2Board();
+
+	void SendDamageToEnemy(bool thePlayerSender, int amount);
+
 	int SelectPlayer(std::string id);
 
 	void EndOfTurn();
@@ -24,6 +29,8 @@ public:
 	void PrintPlayerHand(bool thePlayer);
 	void PrintBoards(bool thePlayer);
 	void PrintPlayerMana(bool thePlayer);
+	void PrintPlayerLife(bool thePlayer);
+	void PrintPlayersLife(bool thePlayer);
 
 	bool IsBoardFree(bool thePlayer);
 	void PutCardOnBoard(bool thePlayer, Card* theCard);
@@ -32,6 +39,10 @@ public:
 	bool GetPlayerTurn();
 
 	void GivePlayerMana();
+
+	void AttackCard(bool thePlayer, Card* theAttackingCard, int attackedCardIndex);
+
+	bool CheckEndOfGame();
 
 private:
 

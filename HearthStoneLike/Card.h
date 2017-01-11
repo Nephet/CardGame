@@ -11,6 +11,9 @@ public:
 
 	int GetManaNeeded();
 
+	bool TakeDamage(int amount);
+	int GetAttack();
+
 private:
 	int _attack;
 	int _defense;

@@ -8,6 +8,7 @@ Player::Player()
 	_playerID = "NONE";
 	_currentMana = 0;
 	_manaMax = 10;
+	_playerLife = 500;
 }
 
 Player::~Player()
@@ -98,4 +99,18 @@ void Player::RefillMana(int mana)
 void Player::RemoveMana(int mana)
 {
 	_currentMana -= mana;
+}
+
+int Player::GetLife()
+{
+	return _playerLife;
+}
+
+void Player::RemoveLife(int life)
+{
+	_playerLife -= life;
+	if (_playerLife <= 0)
+	{
+		// it's a loose
+	}
 }

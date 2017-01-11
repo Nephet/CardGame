@@ -31,6 +31,9 @@ public:
 	void RefillMana(int mana);
 	void RemoveMana(int mana);
 
+	int GetLife();
+	void RemoveLife(int life);
+
 private:
 	std::vector<Card*> _deck;
 	std::vector<Card*> _hand;
@@ -39,5 +42,7 @@ private:
 
 	int _currentMana;
 	int _manaMax;
+
+	int _playerLife;
 };
 
