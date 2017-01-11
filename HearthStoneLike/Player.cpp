@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Player.h"
 #include "Card.h"
+#include <algorithm>
 
 Player::Player()
 {
@@ -58,11 +59,12 @@ Card* Player::ChooseCard(int cardNumberinHand)
 {
 	if (_hand.size() >= cardNumberinHand)
 	{
-		Card* temp = _hand[cardNumberinHand - 1];
-
-		_hand.erase(_hand.begin() + (cardNumberinHand - 1));
-
-		return temp;
+		return _hand[cardNumberinHand - 1];
 	}
 	return nullptr;
+}
+
+void Player::RemoveCard(int cardNumberinHand)
+{
+	_hand.erase(_hand.begin() + (cardNumberinHand - 1));
 }

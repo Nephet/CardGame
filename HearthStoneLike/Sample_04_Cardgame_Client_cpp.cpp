@@ -27,11 +27,8 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 	else if (t.cmd == "play")
 	{
 		int choice = t.json_args()[L"value"].as_integer();
-		int player = t.json_args()[L"player"].as_integer();
-		if (player == 1)
-			gameManager->GetPlayer1()->ChooseCard(choice);
-		else
-			gameManager->GetPlayer2()->ChooseCard(choice);
+		bool player = t.json_args()[L"player"].as_bool();
+		gameManager->PlayACard(player, choice);
 	}
 	else if (t.cmd == "pick")
 	{
@@ -54,7 +51,7 @@ int main(int argc, char *argv[])
 	GameManager* gameManager;
 	gameManager = new GameManager();
 
-	std::string login = "b";
+	std::string login = "a";
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);
@@ -165,7 +162,7 @@ int main(int argc, char *argv[])
 
 	bool thePlayer = login == "a" ? true : false;
 
-	gameManager->PrintHands(thePlayer);
+	gameManager->PrintPlayerHand(thePlayer);
 
 	std::cout << "waiting for the other player..." << std::endl;
 
@@ -192,11 +189,12 @@ int main(int argc, char *argv[])
 		if (gameManager->GetPlayerTurn() == thePlayer)
 		{
 
-			std::cout << "-------------------------------------------" << std::endl;
+			std::cout << "*******************************************" << std::endl;
 			std::cout << "NEW TURN" << std::endl;
-			std::cout << "-------------------------------------------" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
 
-			gameManager->PrintHands(thePlayer);
+			gameManager->PrintPlayerHand(thePlayer);
+			gameManager->PrintBoards(thePlayer);
 
 			// turn loop
 			bool endOfTurn = false;
@@ -223,9 +221,9 @@ int main(int argc, char *argv[])
 						std::cout << ex.what();
 					}
 					endOfTurn = true;
-					std::cout << "-------------------------------------------" << std::endl;
+					std::cout << "*******************************************" << std::endl;
 					std::cout << "END OF TURN" << std::endl;
-					std::cout << "-------------------------------------------" << std::endl;
+					std::cout << "*******************************************\n" << std::endl;
 				}
 				else if (n == 99)
 				{
@@ -243,6 +241,7 @@ int main(int argc, char *argv[])
 				{
 					try
 					{
+						std::cout << "play !" << std::endl;
 						auto t = transactionBroker->submitTransaction(auth->userId(), "play", json);
 						t.get();
 					}
@@ -252,7 +251,8 @@ int main(int argc, char *argv[])
 					}
 				}
 
-				gameManager->PrintHands(thePlayer);
+				gameManager->PrintPlayerHand(thePlayer);
+				gameManager->PrintBoards(thePlayer);
 			}
 
 			std::cout << "waiting for the other player..." << std::endl;

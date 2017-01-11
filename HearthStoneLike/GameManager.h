@@ -23,6 +23,11 @@ public:
 	void EndOfTurn();
 
 	void PrintHands(bool thePlayer);
+	void PrintPlayerHand(bool thePlayer);
+	void PrintBoards(bool thePlayer);
+
+	bool PutCardOnBoard(bool thePlayer, Card* theCard);
+	void PlayACard(bool thePlayer, int choice);
 
 private:
 

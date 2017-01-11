@@ -22,6 +22,7 @@ public:
 	void PrintHand();
 
 	Card* ChooseCard(int cardNumberinHand);
+	void RemoveCard(int cardNumberinHand);
 
 private:
 	std::vector<Card*> _deck;
