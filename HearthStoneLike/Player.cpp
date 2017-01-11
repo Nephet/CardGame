@@ -6,6 +6,8 @@
 Player::Player()
 {
 	_playerID = "NONE";
+	_currentMana = 0;
+	_manaMax = 10;
 }
 
 Player::~Player()
@@ -67,5 +69,33 @@ Card* Player::ChooseCard(int cardNumberinHand)
 void Player::RemoveCard(int cardNumberinHand)
 {
 	_hand.erase(_hand.begin() + (cardNumberinHand - 1));
-	//_hand.pop_back();
+}
+
+void Player::PrintCurrentMana()
+{
+	std::cout << "Mana remaining : " << _currentMana << std::endl;
+}
+
+int Player::GetCurrentMana()
+{
+	return _currentMana;
+}
+
+int Player::GetMaxMana()
+{
+	return _manaMax;
+}
+
+void Player::RefillMana(int mana)
+{
+	_currentMana += mana;
+	if (_currentMana > _manaMax)
+	{
+		_currentMana = _manaMax;
+	}
+}
+
+void Player::RemoveMana(int mana)
+{
+	_currentMana -= mana;
 }

@@ -11,6 +11,7 @@
 
 #include "GameManager.h"
 #include "Card.h"
+#include "Player.h"
 
 // send transaction on the server
 int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameManager)
@@ -34,13 +35,19 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 		int choice = t.json_args()[L"choice"].as_integer();
 		if (player == 1)
 		{
-			gameManager->PutCardOnBoard(player, gameManager->GetPlayer1()->ChooseCard(choice));
+			Card* card = gameManager->GetPlayer1()->ChooseCard(choice);
+			int mana = card->GetManaNeeded();
+			gameManager->PutCardOnBoard(player, card);
 			gameManager->GetPlayer1()->RemoveCard(choice);
+			gameManager->GetPlayer1()->RemoveMana(mana);
 		}
 		else
 		{
-			gameManager->PutCardOnBoard(player, gameManager->GetPlayer2()->ChooseCard(choice));
+			Card* card = gameManager->GetPlayer2()->ChooseCard(choice);
+			int mana = card->GetManaNeeded();
+			gameManager->PutCardOnBoard(player, card);
 			gameManager->GetPlayer2()->RemoveCard(choice);
+			gameManager->GetPlayer2()->RemoveMana(mana);
 		}
 	}
 	else if (t.cmd == "pick")
@@ -64,7 +71,7 @@ int main(int argc, char *argv[])
 	GameManager* gameManager;
 	gameManager = new GameManager();
 
-	std::string login = "b";
+	std::string login = "a";
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);
@@ -208,6 +215,7 @@ int main(int argc, char *argv[])
 			std::cout << "NEW TURN" << std::endl;
 			std::cout << "*******************************************\n" << std::endl;
 
+			gameManager->GivePlayerMana();
 			gameManager->PrintPlayerHand(thePlayer);
 			gameManager->PrintBoards(thePlayer);
 
@@ -215,6 +223,11 @@ int main(int argc, char *argv[])
 			bool endOfTurn = false;
 			while (!endOfTurn)
 			{
+				bool success = false;
+
+				gameManager->PrintPlayerMana(thePlayer);
+				std::cout << std::endl;
+
 				std::cout << "0 - End The Turn" << std::endl;
 				std::cout << "99 - Pick a Card" << std::endl;
 				std::cout << "1..x - Play a Card" << std::endl;
@@ -230,6 +243,7 @@ int main(int argc, char *argv[])
 					{
 						auto t = transactionBroker->submitTransaction(auth->userId(), "endOfTurn", json);
 						t.get();
+						success = true;
 					}
 					catch (std::exception& ex)
 					{
@@ -246,6 +260,7 @@ int main(int argc, char *argv[])
 					{
 						auto t = transactionBroker->submitTransaction(auth->userId(), "pick", json);
 						t.get();
+						success = true;
 					}
 					catch (std::exception& ex)
 					{
@@ -254,25 +269,57 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-					//bool playTheCard = gameManager->IsBoardFree(thePlayer);
+					bool playTheCard = gameManager->IsBoardFree(thePlayer);
+					bool hasMana = true;
+					if (thePlayer)
+					{
+						Card* card = gameManager->GetPlayer1()->ChooseCard(n);
+						if (card != nullptr)
+						{
+							hasMana = gameManager->GetPlayer1()->GetCurrentMana() >= card->GetManaNeeded() ? true : false;
+						}
+						else
+						{
+							hasMana = false;
+						}
+					}
+					else
+					{
+						Card* card = gameManager->GetPlayer2()->ChooseCard(n);
+						if(card != nullptr)
+						{
+							hasMana = gameManager->GetPlayer2()->GetCurrentMana() >= card->GetManaNeeded() ? true : false;
+						}
+						else
+						{
+							hasMana = false;
+						}
+					}
 
-					//if (playTheCard)
-					//{
-						std::cout << "play the card" << std::endl;
+					if (!hasMana)
+						std::cout << "not enought mana to play this card..." << std::endl;
+
+					if (playTheCard && hasMana)
+					{
 						try
 						{
 							auto t = transactionBroker->submitTransaction(auth->userId(), "playCard", json);
 							t.get();
+							success = true;
 						}
 						catch (std::exception& ex)
 						{
 							std::cout << ex.what();
 						}
-					//}
+					}
 				}
 
-				gameManager->PrintPlayerHand(thePlayer);
-				gameManager->PrintBoards(thePlayer);
+				if (success)
+				{
+					gameManager->PrintPlayerMana(thePlayer);
+					gameManager->PrintPlayerHand(thePlayer);
+					gameManager->PrintBoards(thePlayer);
+				}
 			}
 
 			std::cout << "waiting for the other player..." << std::endl;

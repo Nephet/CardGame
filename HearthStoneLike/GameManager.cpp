@@ -5,8 +5,9 @@
 GameManager::GameManager()
 {
 	_nbOfCards = 20;
-	_player1Turn = true;
-	
+	_nbTurn = 1;
+	_nbPlayerPlayed = 0;
+	_playerTurn = true;
 }
 
 GameManager::~GameManager()
@@ -39,14 +40,14 @@ int GameManager::SelectPlayer(std::string id)
 	}
 }
 
-bool GameManager::GetPlayerTurn()
-{
-	return _player1Turn;
-}
-
 void GameManager::EndOfTurn()
 {
-_player1Turn = !_player1Turn;
+	_playerTurn = !_playerTurn;
+	_nbPlayerPlayed++;
+	if (_nbPlayerPlayed >= 2)
+	{
+		_nbTurn++;
+	}
 }
 
 void GameManager::PrintHands(bool thePlayer)
@@ -109,6 +110,18 @@ void GameManager::PrintBoards(bool thePlayer)
 	std::cout << std::endl;
 	std::cout << "-------------------------------------------" << std::endl;
 	std::cout << "-------------------------------------------" << std::endl;
+}
+
+void GameManager::PrintPlayerMana(bool thePlayer)
+{
+	if (thePlayer)
+	{
+		std::cout << "Mana remaining : " << GetPlayer1()->GetCurrentMana() << std::endl;
+	}
+	else
+	{
+		std::cout << "Mana remaining : " << GetPlayer2()->GetCurrentMana() << std::endl;
+	}
 }
 
 void GameManager::InitGame(unsigned int seed)
@@ -193,5 +206,22 @@ void GameManager::RemoveCardFromPlayer(bool thePlayer, int cardIndex)
 	else
 	{
 		_player2->RemoveCard(cardIndex);
+	}
+}
+
+bool GameManager::GetPlayerTurn()
+{
+	return _playerTurn;
+}
+
+void GameManager::GivePlayerMana()
+{
+	if (_playerTurn)
+	{
+		GetPlayer1()->RefillMana(_nbTurn * 3);
+	}
+	else
+	{
+		GetPlayer2()->RefillMana(_nbTurn * 3);
 	}
 }

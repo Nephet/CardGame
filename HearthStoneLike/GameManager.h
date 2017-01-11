@@ -18,17 +18,20 @@ public:
 
 	int SelectPlayer(std::string id);
 
-	/// return true if it's player 1 turn, false otherwise
-	bool GetPlayerTurn();
 	void EndOfTurn();
 
 	void PrintHands(bool thePlayer);
 	void PrintPlayerHand(bool thePlayer);
 	void PrintBoards(bool thePlayer);
+	void PrintPlayerMana(bool thePlayer);
 
 	bool IsBoardFree(bool thePlayer);
 	void PutCardOnBoard(bool thePlayer, Card* theCard);
 	void RemoveCardFromPlayer(bool thePlayer, int cardIndex);
+
+	bool GetPlayerTurn();
+
+	void GivePlayerMana();
 
 private:
 
@@ -45,7 +48,9 @@ private:
 
 	int _nbOfCards;
 
-	bool _player1Turn;
+	int _nbPlayerPlayed;
+	int _nbTurn;
 
+	bool _playerTurn;
 };
 
