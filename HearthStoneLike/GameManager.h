@@ -26,8 +26,9 @@ public:
 	void PrintPlayerHand(bool thePlayer);
 	void PrintBoards(bool thePlayer);
 
-	bool PutCardOnBoard(bool thePlayer, Card* theCard);
-	void PlayACard(bool thePlayer, int choice);
+	bool IsBoardFree(bool thePlayer);
+	void PutCardOnBoard(bool thePlayer, Card* theCard);
+	void RemoveCardFromPlayer(bool thePlayer, int cardIndex);
 
 private:
 

@@ -67,4 +67,5 @@ Card* Player::ChooseCard(int cardNumberinHand)
 void Player::RemoveCard(int cardNumberinHand)
 {
 	_hand.erase(_hand.begin() + (cardNumberinHand - 1));
+	//_hand.pop_back();
 }

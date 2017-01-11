@@ -24,11 +24,24 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 	{
 		gameState += t.json_args()[L"value"].as_integer();
 	}
-	else if (t.cmd == "play")
+	else if (t.cmd == "push")
 	{
 		int choice = t.json_args()[L"value"].as_integer();
-		bool player = t.json_args()[L"player"].as_bool();
-		gameManager->PlayACard(player, choice);
+	}
+	else if (t.cmd == "playCard")
+	{
+		int player = t.json_args()[L"player"].as_integer();
+		int choice = t.json_args()[L"choice"].as_integer();
+		if (player == 1)
+		{
+			gameManager->PutCardOnBoard(player, gameManager->GetPlayer1()->ChooseCard(choice));
+			gameManager->GetPlayer1()->RemoveCard(choice);
+		}
+		else
+		{
+			gameManager->PutCardOnBoard(player, gameManager->GetPlayer2()->ChooseCard(choice));
+			gameManager->GetPlayer2()->RemoveCard(choice);
+		}
 	}
 	else if (t.cmd == "pick")
 	{
@@ -51,7 +64,7 @@ int main(int argc, char *argv[])
 	GameManager* gameManager;
 	gameManager = new GameManager();
 
-	std::string login = "a";
+	std::string login = "b";
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);
@@ -160,6 +173,8 @@ int main(int argc, char *argv[])
 	gameSession->waitServerReady().get();//
 	std::cout << "CONNECTED" << std::endl;
 
+	std::cout << "VERSION 2" << std::endl;
+
 	bool thePlayer = login == "a" ? true : false;
 
 	gameManager->PrintPlayerHand(thePlayer);
@@ -206,8 +221,8 @@ int main(int argc, char *argv[])
 				std::cin >> n;
 
 				auto json = web::json::value();
-				json[L"player"] = (int)thePlayer;
-				json[L"value"] = n;
+				json[L"player"] = thePlayer;
+				json[L"choice"] = n;
 
 				if (n == 0)
 				{
@@ -239,16 +254,21 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-					try
-					{
-						std::cout << "play !" << std::endl;
-						auto t = transactionBroker->submitTransaction(auth->userId(), "play", json);
-						t.get();
-					}
-					catch (std::exception& ex)
-					{
-						std::cout << ex.what();
-					}
+					//bool playTheCard = gameManager->IsBoardFree(thePlayer);
+
+					//if (playTheCard)
+					//{
+						std::cout << "play the card" << std::endl;
+						try
+						{
+							auto t = transactionBroker->submitTransaction(auth->userId(), "playCard", json);
+							t.get();
+						}
+						catch (std::exception& ex)
+						{
+							std::cout << ex.what();
+						}
+					//}
 				}
 
 				gameManager->PrintPlayerHand(thePlayer);

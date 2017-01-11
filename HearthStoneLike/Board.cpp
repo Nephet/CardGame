@@ -30,10 +30,8 @@ bool Board::IsFree()
 {
 	if (GetNbCardsOnBoard() < maxCardsOnBoard)
 	{
-		std::cout << "is free" << std::endl;
 		return true;
 	}
-	std::cout << "not free" << std::endl;
 	return false;
 }
 

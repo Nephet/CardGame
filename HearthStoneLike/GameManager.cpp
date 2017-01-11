@@ -150,62 +150,48 @@ void GameManager::PickCards(Player* player, int nbCard)
 	}
 }
 
-bool GameManager::PutCardOnBoard(bool thePlayer, Card* theCard)
+bool GameManager::IsBoardFree(bool thePlayer)
 {
 	if (thePlayer)
 	{
-		if(_player1Board->IsFree())
-		{
-			_player1Board->PutCard(theCard);
-		}
-		else
+		if(!_player1Board->IsFree())
 		{
 			std::cout << "Too many cards on the board !" << std::endl;
 			return false;
 		}
+		return true;
 	}
 	else
 	{
-		if (_player2Board->IsFree())
-		{
-			_player2Board->PutCard(theCard);
-		}
-		else
+		if (!_player2Board->IsFree())
 		{
 			std::cout << "Too many cards on the board !" << std::endl;
 			return false;
 		}
+		return true;
 	}
-	return true;
 }
 
-void GameManager::PlayACard(bool thePlayer, int choice)
+void GameManager::PutCardOnBoard(bool thePlayer, Card* theCard)
 {
 	if (thePlayer)
 	{
-		std::cout << "player 1 want to play" << std::endl;
-		Card* theCard = GetPlayer1()->ChooseCard(choice);
-		std::cout << "player 1 check if he can put" << std::endl;
-		bool canPut = PutCardOnBoard(thePlayer, theCard);
-		if (canPut)
-		{
-			std::cout << "player 1 can put" << std::endl;
-			GetPlayer1()->RemoveCard(choice);
-			PrintBoards(thePlayer);
-		}
-		else
-		{
-			std::cout << "player 1 cannot put" << std::endl;
-		}
+		_player1Board->PutCard(theCard);
 	}
 	else
 	{
-		Card* theCard = GetPlayer2()->ChooseCard(choice);
-		bool canPut = PutCardOnBoard(thePlayer, theCard);
-		if (canPut)
-		{
-			GetPlayer2()->RemoveCard(choice);
-			PrintBoards(thePlayer);
-		}
+		_player2Board->PutCard(theCard);
+	}
+}
+
+void GameManager::RemoveCardFromPlayer(bool thePlayer, int cardIndex)
+{
+	if (thePlayer)
+	{
+		_player1->RemoveCard(cardIndex);
+	}
+	else
+	{
+		_player2->RemoveCard(cardIndex);
 	}
 }
