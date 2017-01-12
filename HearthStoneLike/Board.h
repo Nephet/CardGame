@@ -16,6 +16,8 @@ public:
 	Card* GetCard(int index);
 	void RemoveCard(int index);
 
+	void SetHadAttack(bool newState);
+
 private:
 	std::vector<Card*> _currentCards;
 	int maxCardsOnBoard;

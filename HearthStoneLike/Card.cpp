@@ -6,6 +6,7 @@ Card::Card(int att, int def, int manaNeed)
 	_attack = att;
 	_defense = def;
 	_manaNeeded = manaNeed;
+	_hadAttacked = false;
 }
 
 Card::~Card()
@@ -14,7 +15,8 @@ Card::~Card()
 
 void Card::ToString()
 {
-	std::cout << "att :" << _attack << " def :" << _defense << " manaNeeded :" << _manaNeeded << std::endl;
+	std::string canAttack = _hadAttacked ? "no" : "yes";
+	std::cout << "att :" << _attack << " def :" << _defense << " manaNeeded :" << _manaNeeded << " can attack : " << canAttack << std::endl;
 }
 
 int Card::GetManaNeeded()
@@ -35,4 +37,14 @@ bool Card::TakeDamage(int amount)
 int Card::GetAttack()
 {
 	return _attack;
+}
+
+void Card::SetHadAttacked(bool newState)
+{
+	_hadAttacked = newState;
+}
+
+bool Card::GetHadAttacked()
+{
+	return _hadAttacked;
 }

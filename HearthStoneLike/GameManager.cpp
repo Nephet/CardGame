@@ -42,6 +42,14 @@ int GameManager::SelectPlayer(std::string id)
 
 void GameManager::EndOfTurn()
 {
+	if (_playerTurn)
+	{
+		GetPlayer1Board()->SetHadAttack(false);
+	}
+	else
+	{
+		GetPlayer2Board()->SetHadAttack(false);
+	}
 	_playerTurn = !_playerTurn;
 	_nbPlayerPlayed++;
 	if (_nbPlayerPlayed >= 2)

@@ -14,9 +14,14 @@ public:
 	bool TakeDamage(int amount);
 	int GetAttack();
 
+	void SetHadAttacked(bool newState);
+	bool GetHadAttacked();
+
 private:
 	int _attack;
 	int _defense;
 	int _manaNeeded;
+
+	bool _hadAttacked;
 };
 

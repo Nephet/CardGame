@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 	GameManager* gameManager;
 	gameManager = new GameManager();
 
-	std::string login = "b";
+	std::string login = "a";
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);
@@ -290,35 +290,45 @@ int main(int argc, char *argv[])
 							Card* card = gameManager->GetPlayer1Board()->GetCard(cardToAttack);
 							if (card != nullptr)
 							{
-								json[L"attackCard"] = cardToAttack;
-
-								std::cout << "Select an enemy card... (0 : enemy base)" << std::endl;
-								std::cin >> enemyCard;
-
-								Card* cardEnemy = nullptr;
-
-								if(enemyCard != 0)
-									cardEnemy = gameManager->GetPlayer2Board()->GetCard(enemyCard);
-
-								if (cardEnemy != nullptr || enemyCard == 0)
+								if (card->GetHadAttacked())
 								{
-									json[L"enemyCard"] = enemyCard;
-									try
-									{
-										auto t = transactionBroker->submitTransaction(auth->userId(), "AttackCard", json);
-										t.get();
-										success = true;
-									}
-									catch (std::exception& ex)
-									{
-										std::cout << ex.what();
-										success = false;
-									}
+									std::cout << "This card have already attacked" << std::endl;
+									success = false;
 								}
 								else
 								{
-									std::cout << "No enemy card to attack..." << std::endl;
-									success = false;
+									card->SetHadAttacked(true);
+
+									json[L"attackCard"] = cardToAttack;
+
+									std::cout << "Select an enemy card... (0 : enemy base)" << std::endl;
+									std::cin >> enemyCard;
+
+									Card* cardEnemy = nullptr;
+
+									if (enemyCard != 0)
+										cardEnemy = gameManager->GetPlayer2Board()->GetCard(enemyCard);
+
+									if (cardEnemy != nullptr || enemyCard == 0)
+									{
+										json[L"enemyCard"] = enemyCard;
+										try
+										{
+											auto t = transactionBroker->submitTransaction(auth->userId(), "AttackCard", json);
+											t.get();
+											success = true;
+										}
+										catch (std::exception& ex)
+										{
+											std::cout << ex.what();
+											success = false;
+										}
+									}
+									else
+									{
+										std::cout << "No enemy card to attack..." << std::endl;
+										success = false;
+									}
 								}
 							}
 							else
@@ -344,35 +354,45 @@ int main(int argc, char *argv[])
 							Card* card = gameManager->GetPlayer2Board()->GetCard(cardToAttack);
 							if (card != nullptr)
 							{
-								json[L"attackCard"] = cardToAttack;
-
-								std::cout << "Select an enemy card... (0 : enemy base)" << std::endl;
-								std::cin >> enemyCard;
-
-								Card* cardEnemy = nullptr;
-
-								if (enemyCard != 0)
-									cardEnemy = gameManager->GetPlayer2Board()->GetCard(enemyCard);
-
-								if (cardEnemy != nullptr || enemyCard == 0)
+								if (card->GetHadAttacked())
 								{
-									json[L"enemyCard"] = enemyCard;
-									try
-									{
-										auto t = transactionBroker->submitTransaction(auth->userId(), "AttackCard", json);
-										t.get();
-										success = true;
-									}
-									catch (std::exception& ex)
-									{
-										std::cout << ex.what();
-										success = false;
-									}
+									std::cout << "This card have already attacked" << std::endl;
+									success = false;
 								}
 								else
 								{
-									std::cout << "No enemy card to attack..." << std::endl;
-									success = false;
+									card->SetHadAttacked(true);
+
+									json[L"attackCard"] = cardToAttack;
+
+									std::cout << "Select an enemy card... (0 : enemy base)" << std::endl;
+									std::cin >> enemyCard;
+
+									Card* cardEnemy = nullptr;
+
+									if (enemyCard != 0)
+										cardEnemy = gameManager->GetPlayer2Board()->GetCard(enemyCard);
+
+									if (cardEnemy != nullptr || enemyCard == 0)
+									{
+										json[L"enemyCard"] = enemyCard;
+										try
+										{
+											auto t = transactionBroker->submitTransaction(auth->userId(), "AttackCard", json);
+											t.get();
+											success = true;
+										}
+										catch (std::exception& ex)
+										{
+											std::cout << ex.what();
+											success = false;
+										}
+									}
+									else
+									{
+										std::cout << "No enemy card to attack..." << std::endl;
+										success = false;
+									}
 								}
 							}
 							else
@@ -447,6 +467,44 @@ int main(int argc, char *argv[])
 
 		}
 	}
+
+	if (gameManager->GetPlayer1()->GetLife() <= 0)
+	{
+		if (thePlayer)
+		{
+			std::cout << "*******************************************" << std::endl;
+			std::cout << "YOU LOOSE" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
+		}
+		else
+		{
+			std::cout << "*******************************************" << std::endl;
+			std::cout << "YOU WIN" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
+		}
+	}
+	else if (gameManager->GetPlayer2()->GetLife() <= 0)
+	{
+		if (thePlayer)
+		{
+			std::cout << "*******************************************" << std::endl;
+			std::cout << "YOU WIN" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
+		}
+		else
+		{
+			std::cout << "*******************************************" << std::endl;
+			std::cout << "YOU LOOSE" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "exception : Bug at the end of the game with life..." << std::endl;
+	}
+
+	int l;
+	std::cin >> l;
 
 	std::cout << "disconnecting...";
 	client->disconnect().get();

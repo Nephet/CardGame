@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Board.h"
+#include "Card.h"
 
 Board::Board()
 {
@@ -48,4 +49,12 @@ Card* Board::GetCard(int index)
 void Board::RemoveCard(int index)
 {
 	_currentCards.erase(_currentCards.begin() + (index - 1));
+}
+
+void Board::SetHadAttack(bool newState)
+{
+	for each (Card* card in _currentCards)
+	{
+		card->SetHadAttacked(newState);
+	}
 }
