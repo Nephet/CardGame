@@ -24,13 +24,18 @@ void CardDealer::CreateCards(int nbToCreate, unsigned int seed)
 		int randDefense = std::rand() % (_defenseMax + 1);
 		int randMana = std::rand() % (5);
 
-		_cards->push_back(new Card(randAttack, randDefense, randMana));
+		Card* c = new Card(randAttack, randDefense, randMana);
+		Card* c2 = new Card(randAttack, randDefense, randMana);
+
+		_cards->push_back(c);
+		_cards->push_back(c2);
 	}
 }
 
 void CardDealer::DealACard(Player* player, Player* player2)
 {
 	player->AddCard(_cards->back());
+	_cards->pop_back();
 	player2->AddCard(_cards->back());
 	_cards->pop_back();
 }

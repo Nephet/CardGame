@@ -4,7 +4,7 @@
 
 GameManager::GameManager()
 {
-	_nbOfCards = 20;
+	_nbOfCards = 10;
 	_nbTurn = 1;
 	_nbPlayerPlayed = 0;
 	_playerTurn = true;
