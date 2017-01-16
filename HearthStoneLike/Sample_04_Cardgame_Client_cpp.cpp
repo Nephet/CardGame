@@ -52,8 +52,16 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 
 		if (enemyCard == 0)
 		{
-			Card* card = gameManager->GetPlayer1Board()->GetCard(attackCard);
-			gameManager->SendDamageToEnemy(player, card->GetAttack());
+			if (player)
+			{
+				Card* card = gameManager->GetPlayer1Board()->GetCard(attackCard);
+				gameManager->SendDamageToEnemy(player, card->GetAttack());
+			}
+			else
+			{
+				Card* card = gameManager->GetPlayer2Board()->GetCard(attackCard);
+				gameManager->SendDamageToEnemy(player, card->GetAttack());
+			}
 		}
 		else
 		{
@@ -82,6 +90,11 @@ int ApplyTransaction(Stormancer::UpdateDto t, int& gameState, GameManager* gameM
 	{
 		gameManager->EndOfTurn();
 	}
+	else if (t.cmd == "AskForPlayer")
+	{
+		int pseudo = t.json_args()[L"pseudo"].as_integer();
+		gameManager->AddPlayer(pseudo);
+	}
 	return gameState;
 }
 
@@ -91,7 +104,14 @@ int main(int argc, char *argv[])
 	GameManager* gameManager;
 	gameManager = new GameManager();
 
+	std::cout << "Enter your pseudo" << std::endl;
+
 	std::string login = "a";
+	std::cin >> login;
+
+	std::hash<std::string> hash_fn;
+	size_t str_hash = hash_fn(login);
+
 	if (argc >= 2)
 	{
 		login = std::string(argv[1]);
@@ -109,7 +129,7 @@ int main(int argc, char *argv[])
 	std::cout << "Authenticating as '" << login << "'...";
 	auto scene = auth->steamLogin(login).then([auth](pplx::task<Stormancer::ScenePtr> t)
 	{
-		try 
+		try
 		{
 			t.get();
 			std::cout << "DONE" << std::endl;
@@ -124,13 +144,13 @@ int main(int argc, char *argv[])
 	{
 		auto matchmakingScene = t.get();
 		//Connect to the matchmaking scene
-		return matchmakingScene.lock()->connect().then([matchmakingScene](pplx::task<void> connectTask) 
+		return matchmakingScene.lock()->connect().then([matchmakingScene](pplx::task<void> connectTask)
 		{
 			try {
 				connectTask.get();
 				return matchmakingScene;
 			}
-			catch(std::exception& ex)
+			catch (std::exception& ex)
 			{
 				throw;
 			}
@@ -149,7 +169,7 @@ int main(int argc, char *argv[])
 
 	});
 
-	matchmaking->findMatch("matchmaking-sample");
+	matchmaking->findMatch("matchmaking-sample", "AntoineBenoitJulien");
 
 	std::cout << "waiting for game...";
 	Stormancer::MatchmakingResponse mmResponse = pplx::create_task(tce).get();
@@ -164,14 +184,28 @@ int main(int argc, char *argv[])
 		std::cout << "A desynchronization error occured. Details : " << error << std::endl;
 		running = false;
 	});
-	transactionBroker->onUpdateGameCallback([&gameState, &gameManager](Stormancer::UpdateDto update)
+	transactionBroker->onUpdateGameCallback([&gameState, &gameManager, &str_hash](Stormancer::UpdateDto update)
 	{
 
 		auto newHash = ApplyTransaction(update, gameState, gameManager);
-		std::cout << "game state updated : " << gameState << std::endl;
+		//std::cout << "game state updated : " << gameState << std::endl;
+
+		if (!gameManager->CheckEndOfGame() && !gameManager->CheckGameFinished() && gameManager->GetGameStarted())
+		{
+			system("cls");
+			gameManager->PrintPlayersLife(!gameManager->GetPlayerTurn());
+			gameManager->PrintPlayerMana(!gameManager->GetPlayerTurn());
+			gameManager->PrintPlayerHand(!gameManager->GetPlayerTurn());
+			gameManager->PrintBoards(!gameManager->GetPlayerTurn());
+		}
+		else if(gameManager->CheckEndOfGame() && gameManager->CheckGameFinished() && gameManager->GetGameStarted())
+		{
+			gameManager->PrintWinner(str_hash);
+		}
+
 		return newHash; //Returns the new hash to the server for validation
 	});
-	transactionBroker->onReplayTLog([&gameState,&running, &gameManager](std::vector<Stormancer::TransactionLogItem> transactions)
+	transactionBroker->onReplayTLog([&gameState, &running, &gameManager](std::vector<Stormancer::TransactionLogItem> transactions)
 	{
 		std::cout << "Replay existing transaction log...";
 		for (auto t : transactions)
@@ -179,7 +213,7 @@ int main(int argc, char *argv[])
 			auto newHash = ApplyTransaction(t.transactionCommand, gameState, gameManager);
 			if (t.hashAvailable && t.resultHash != newHash)
 			{
-				std::cout << "Desynchronization while playing Transaction log. Expected "<<t.resultHash << " obtained "<< newHash << std::endl;
+				std::cout << "Desynchronization while playing Transaction log. Expected " << t.resultHash << " obtained " << newHash << std::endl;
 				std::string v;
 				std::cin >> v;
 				running = false;
@@ -199,11 +233,24 @@ int main(int argc, char *argv[])
 	gameSession->waitServerReady().get();//
 	std::cout << "CONNECTED" << std::endl;
 
-	std::cout << "VERSION 2" << std::endl;
+	bool thePlayer = true;
 
-	bool thePlayer = login == "a" ? true : false;
+	try
+	{
+		auto json = web::json::value();
+		json[L"player"] = thePlayer;
+		json[L"pseudo"] = str_hash;
+		auto t = transactionBroker->submitTransaction(auth->userId(), "AskForPlayer", json);
+		t.get();
+		thePlayer = gameManager->GetCurrentPlayer(str_hash);
+	}
+	catch (std::exception& ex)
+	{
+		std::cout << ex.what();
+	}
 
-	gameManager->PrintPlayerHand(thePlayer);
+	system("cls");
+	//gameManager->PrintPlayerHand(thePlayer);
 
 	std::cout << "waiting for the other player..." << std::endl;
 
@@ -211,9 +258,22 @@ int main(int argc, char *argv[])
 	// game loop
 	while (running)
 	{
+		if (gameManager->CheckEndOfGame())
+		{
+			running = false;
+			break;
+		}
+
 		if (gameManager->GetPlayerTurn() == thePlayer)
 		{
 
+			if (gameManager->CheckEndOfGame())
+			{
+				running = false;
+				break;
+			}
+
+			//system("cls");
 			std::cout << "*******************************************" << std::endl;
 			std::cout << "NEW TURN" << std::endl;
 			std::cout << "*******************************************\n" << std::endl;
@@ -238,6 +298,12 @@ int main(int argc, char *argv[])
 			bool endOfTurn = false;
 			while (!endOfTurn)
 			{
+				if (gameManager->CheckEndOfGame())
+				{
+					running = false;
+					break;
+				}
+
 				bool success = false;
 
 				gameManager->PrintPlayersLife(thePlayer);
@@ -406,6 +472,13 @@ int main(int argc, char *argv[])
 				// play a card
 				else
 				{
+					if (gameManager->CheckEndOfGame())
+					{
+						running = false;
+						break;
+						system("cls");
+					}
+
 					bool playTheCard = gameManager->IsBoardFree(thePlayer);
 					bool hasMana = true;
 					if (thePlayer)
@@ -423,7 +496,7 @@ int main(int argc, char *argv[])
 					else
 					{
 						Card* card = gameManager->GetPlayer2()->ChooseCard(n);
-						if(card != nullptr)
+						if (card != nullptr)
 						{
 							hasMana = gameManager->GetPlayer2()->GetCurrentMana() >= card->GetManaNeeded() ? true : false;
 						}
@@ -453,6 +526,7 @@ int main(int argc, char *argv[])
 
 				if (success)
 				{
+					system("cls");
 					gameManager->PrintPlayersLife(thePlayer);
 					gameManager->PrintPlayerMana(thePlayer);
 					gameManager->PrintPlayerHand(thePlayer);
@@ -461,47 +535,17 @@ int main(int argc, char *argv[])
 			}
 
 			if (gameManager->CheckEndOfGame())
+			{
 				running = false;
+				break;
+			}
 
 			std::cout << "waiting for the other player..." << std::endl;
 
 		}
 	}
 
-	if (gameManager->GetPlayer1()->GetLife() <= 0)
-	{
-		if (thePlayer)
-		{
-			std::cout << "*******************************************" << std::endl;
-			std::cout << "YOU LOOSE" << std::endl;
-			std::cout << "*******************************************\n" << std::endl;
-		}
-		else
-		{
-			std::cout << "*******************************************" << std::endl;
-			std::cout << "YOU WIN" << std::endl;
-			std::cout << "*******************************************\n" << std::endl;
-		}
-	}
-	else if (gameManager->GetPlayer2()->GetLife() <= 0)
-	{
-		if (thePlayer)
-		{
-			std::cout << "*******************************************" << std::endl;
-			std::cout << "YOU WIN" << std::endl;
-			std::cout << "*******************************************\n" << std::endl;
-		}
-		else
-		{
-			std::cout << "*******************************************" << std::endl;
-			std::cout << "YOU LOOSE" << std::endl;
-			std::cout << "*******************************************\n" << std::endl;
-		}
-	}
-	else
-	{
-		std::cout << "exception : Bug at the end of the game with life..." << std::endl;
-	}
+	std::cout << "Press a key to Quit";
 
 	int l;
 	std::cin >> l;
@@ -511,5 +555,3 @@ int main(int argc, char *argv[])
 	std::cout << "DONE" << std::endl;
 	return 0;
 }
-
-

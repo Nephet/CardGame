@@ -8,6 +8,9 @@ GameManager::GameManager()
 	_nbTurn = 1;
 	_nbPlayerPlayed = 0;
 	_playerTurn = true;
+	_players = std::vector<size_t>();
+	_endGame = false;
+	_gameStarted = false;
 }
 
 GameManager::~GameManager()
@@ -275,19 +278,25 @@ void GameManager::AttackCard(bool thePlayer, Card* theAttackingCard, int attacke
 	if (thePlayer)
 	{
 		Card* card = _player2Board->GetCard(attackedCardIndex);
-		bool isDead = card->TakeDamage(theAttackingCard->GetAttack());
-		if (isDead)
+		if (card != nullptr)
 		{
-			_player2Board->RemoveCard(attackedCardIndex);
+			bool isDead = card->TakeDamage(theAttackingCard->GetAttack());
+			if (isDead)
+			{
+				_player2Board->RemoveCard(attackedCardIndex);
+			}
 		}
 	}
 	else
 	{
 		Card* card = _player1Board->GetCard(attackedCardIndex);
-		bool isDead = card->TakeDamage(theAttackingCard->GetAttack());
-		if (isDead)
+		if (card != nullptr)
 		{
-			_player1Board->RemoveCard(attackedCardIndex);
+			bool isDead = card->TakeDamage(theAttackingCard->GetAttack());
+			if (isDead)
+			{
+				_player1Board->RemoveCard(attackedCardIndex);
+			}
 		}
 	}
 }
@@ -296,9 +305,86 @@ bool GameManager::CheckEndOfGame()
 {
 	if (_player1->GetLife() <= 0 || _player2->GetLife() <= 0)
 	{
+		_endGame = true;
 		return true;
 	}
 	return false;
+}
+
+bool GameManager::CheckGameFinished()
+{
+	return _endGame;
+}
+
+void GameManager::AddPlayer(int pseudo)
+{
+	_players.push_back(pseudo);
+	if (_players.size() == 2)
+	{
+		_gameStarted = true;
+	}
+}
+
+bool GameManager::GetCurrentPlayer(int pseudo)
+{
+	for (int i = 0; i < _players.size(); i++)
+	{
+		if (pseudo == _players[i])
+		{
+			return (bool)i;
+		}
+	}
+}
+
+int GameManager::GetCurrentPlayers()
+{
+	return _players.size();
+}
+
+void GameManager::PrintWinner(int hash)
+{
+	_endGame = true;
+	std::cout << std::endl;
+	if (_player1->GetLife() <= 0)
+	{
+		if (hash == _players[1])
+		{
+			std::cout << "*******************************************" << std::endl;
+			std::cout << "YOU LOOSE" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
+		}
+		else
+		{
+			std::cout << "*******************************************" << std::endl;
+			std::cout << "YOU WIN" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
+		}
+	}
+	else if (_player2->GetLife() <= 0)
+	{
+		if (hash == _players[1])
+		{
+			std::cout << "*******************************************" << std::endl;
+			std::cout << "YOU WIN" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
+		}
+		else
+		{
+			std::cout << "*******************************************" << std::endl;
+			std::cout << "YOU LOOSE" << std::endl;
+			std::cout << "*******************************************\n" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "exception : Bug at the end of the game with life..." << std::endl;
+	}
+	std::cout << std::endl;
+}
+
+bool GameManager::GetGameStarted()
+{
+	return _gameStarted;
 }
 
 void GameManager::SendDamageToEnemy(bool thePlayerSender, int amount)

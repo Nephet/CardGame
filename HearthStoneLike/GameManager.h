@@ -43,6 +43,15 @@ public:
 	void AttackCard(bool thePlayer, Card* theAttackingCard, int attackedCardIndex);
 
 	bool CheckEndOfGame();
+	bool CheckGameFinished();
+
+	void AddPlayer(int pseudo);
+	bool GetCurrentPlayer(int pseudo);
+	int GetCurrentPlayers();
+
+	void PrintWinner(int hash);
+
+	bool GetGameStarted();
 
 private:
 
@@ -63,5 +72,10 @@ private:
 	int _nbTurn;
 
 	bool _playerTurn;
+
+	std::vector<size_t> _players;
+
+	bool _endGame;
+	bool _gameStarted;
 };
 
