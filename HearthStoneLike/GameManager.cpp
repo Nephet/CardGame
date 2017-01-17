@@ -334,11 +334,12 @@ bool GameManager::GetCurrentPlayer(int pseudo)
 			return (bool)i;
 		}
 	}
+	return false;
 }
 
 int GameManager::GetCurrentPlayers()
 {
-	return _players.size();
+	return (int)_players.size();
 }
 
 void GameManager::PrintWinner(int hash)

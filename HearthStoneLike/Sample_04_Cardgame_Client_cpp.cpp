@@ -188,15 +188,20 @@ int main(int argc, char *argv[])
 	{
 
 		auto newHash = ApplyTransaction(update, gameState, gameManager);
-		//std::cout << "game state updated : " << gameState << std::endl;
 
 		if (!gameManager->CheckEndOfGame() && !gameManager->CheckGameFinished() && gameManager->GetGameStarted())
 		{
 			system("cls");
-			gameManager->PrintPlayersLife(!gameManager->GetPlayerTurn());
-			gameManager->PrintPlayerMana(!gameManager->GetPlayerTurn());
-			gameManager->PrintPlayerHand(!gameManager->GetPlayerTurn());
-			gameManager->PrintBoards(!gameManager->GetPlayerTurn());
+
+			bool turn = gameManager->GetCurrentPlayer(str_hash);
+
+			if (turn != gameManager->GetPlayerTurn())
+			{
+				gameManager->PrintPlayersLife(turn);
+				gameManager->PrintPlayerMana(turn);
+				gameManager->PrintPlayerHand(turn);
+				gameManager->PrintBoards(turn);
+			}
 		}
 		else if(gameManager->CheckEndOfGame() && gameManager->CheckGameFinished() && gameManager->GetGameStarted())
 		{
@@ -250,11 +255,11 @@ int main(int argc, char *argv[])
 	}
 
 	system("cls");
-	//gameManager->PrintPlayerHand(thePlayer);
 
 	std::cout << "waiting for the other player..." << std::endl;
 
 	int n;
+	std::string key;
 	// game loop
 	while (running)
 	{
@@ -273,10 +278,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			//system("cls");
-			std::cout << "*******************************************" << std::endl;
-			std::cout << "NEW TURN" << std::endl;
-			std::cout << "*******************************************\n" << std::endl;
+			system("cls");
 
 			try
 			{
@@ -291,8 +293,6 @@ int main(int argc, char *argv[])
 			}
 
 			gameManager->GivePlayerMana();
-			gameManager->PrintPlayerHand(thePlayer);
-			gameManager->PrintBoards(thePlayer);
 
 			// turn loop
 			bool endOfTurn = false;
@@ -304,10 +304,14 @@ int main(int argc, char *argv[])
 					break;
 				}
 
-				bool success = false;
-
+				system("cls");
 				gameManager->PrintPlayersLife(thePlayer);
 				gameManager->PrintPlayerMana(thePlayer);
+				gameManager->PrintPlayerHand(thePlayer);
+				gameManager->PrintBoards(thePlayer);
+
+				bool success = false;
+
 				std::cout << std::endl;
 
 				std::cout << "0 - End The Turn" << std::endl;
@@ -333,9 +337,6 @@ int main(int argc, char *argv[])
 						std::cout << ex.what();
 					}
 					endOfTurn = true;
-					std::cout << "*******************************************" << std::endl;
-					std::cout << "END OF TURN" << std::endl;
-					std::cout << "*******************************************\n" << std::endl;
 				}
 				// attack a card
 				else if (n == 99)
@@ -344,7 +345,8 @@ int main(int argc, char *argv[])
 					{
 						if (gameManager->GetPlayer1Board()->GetNbCardsOnBoard() == 0)
 						{
-							std::cout << "no cards on the board to attack..." << std::endl;
+							std::cout << "no cards on the board to attack... (press a key to continue)" << std::endl;
+							std::cin >> key;
 							success = false;
 						}
 						else
@@ -358,12 +360,12 @@ int main(int argc, char *argv[])
 							{
 								if (card->GetHadAttacked())
 								{
-									std::cout << "This card have already attacked" << std::endl;
+									std::cout << "This card have already attacked (press a key to continue)" << std::endl;
+									std::cin >> key;
 									success = false;
 								}
 								else
 								{
-									card->SetHadAttacked(true);
 
 									json[L"attackCard"] = cardToAttack;
 
@@ -378,6 +380,7 @@ int main(int argc, char *argv[])
 									if (cardEnemy != nullptr || enemyCard == 0)
 									{
 										json[L"enemyCard"] = enemyCard;
+										card->SetHadAttacked(true);
 										try
 										{
 											auto t = transactionBroker->submitTransaction(auth->userId(), "AttackCard", json);
@@ -392,14 +395,16 @@ int main(int argc, char *argv[])
 									}
 									else
 									{
-										std::cout << "No enemy card to attack..." << std::endl;
+										std::cout << "No enemy card to attack... (press a key to continue)" << std::endl;
+										std::cin >> key;
 										success = false;
 									}
 								}
 							}
 							else
 							{
-								std::cout << "No card to attack..." << std::endl;
+								std::cout << "No card to attack... (press a key to continue)" << std::endl;
+								std::cin >> key;
 								success = false;
 							}
 						}
@@ -408,7 +413,8 @@ int main(int argc, char *argv[])
 					{
 						if (gameManager->GetPlayer2Board()->GetNbCardsOnBoard() == 0)
 						{
-							std::cout << "no cards on the board to attack..." << std::endl;
+							std::cout << "no cards on the board to attack... (press a key to continue)" << std::endl;
+							std::cin >> key;
 							success = false;
 						}
 						else
@@ -422,7 +428,8 @@ int main(int argc, char *argv[])
 							{
 								if (card->GetHadAttacked())
 								{
-									std::cout << "This card have already attacked" << std::endl;
+									std::cout << "This card have already attacked (press a key to continue)" << std::endl;
+									std::cin >> key;
 									success = false;
 								}
 								else
@@ -456,14 +463,17 @@ int main(int argc, char *argv[])
 									}
 									else
 									{
-										std::cout << "No enemy card to attack..." << std::endl;
+										std::cout << "No enemy card to attack... (press a key to continue)" << std::endl;
+										std::cin >> key;
 										success = false;
 									}
 								}
 							}
 							else
 							{
-								std::cout << "No card to attack..." << std::endl;
+								std::cout << "No card to attack... (press a key to continue)" << std::endl;
+								std::cin >> key;
+
 								success = false;
 							}
 						}
@@ -507,7 +517,11 @@ int main(int argc, char *argv[])
 					}
 
 					if (!hasMana)
-						std::cout << "not enought mana to play this card..." << std::endl;
+					{
+						std::cout << "not enought mana to play this card... (press a key to continue)" << std::endl;
+						std::cin >> key;
+					}
+						
 
 					if (playTheCard && hasMana)
 					{
@@ -523,15 +537,6 @@ int main(int argc, char *argv[])
 						}
 					}
 				}
-
-				if (success)
-				{
-					system("cls");
-					gameManager->PrintPlayersLife(thePlayer);
-					gameManager->PrintPlayerMana(thePlayer);
-					gameManager->PrintPlayerHand(thePlayer);
-					gameManager->PrintBoards(thePlayer);
-				}
 			}
 
 			if (gameManager->CheckEndOfGame())
@@ -539,8 +544,6 @@ int main(int argc, char *argv[])
 				running = false;
 				break;
 			}
-
-			std::cout << "waiting for the other player..." << std::endl;
 
 		}
 	}

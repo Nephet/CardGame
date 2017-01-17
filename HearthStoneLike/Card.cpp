@@ -6,7 +6,7 @@ Card::Card(int att, int def, int manaNeed)
 	_attack = att;
 	_defense = def;
 	_manaNeeded = manaNeed;
-	_hadAttacked = false;
+	_hadAttacked = true;
 }
 
 Card::~Card()

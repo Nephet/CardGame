@@ -8,7 +8,7 @@ Player::Player()
 	_playerID = "NONE";
 	_currentMana = 0;
 	_manaMax = 10;
-	_playerLife = 50;
+	_playerLife = 500;
 }
 
 Player::~Player()

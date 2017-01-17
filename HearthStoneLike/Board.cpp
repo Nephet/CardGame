@@ -43,12 +43,15 @@ void Board::PutCard(Card* theCard)
 
 Card* Board::GetCard(int index)
 {
-	return _currentCards.at(index - 1);
+	if(index - 1 < _currentCards.size())
+		return _currentCards.at(index - 1);
+	return nullptr;
 }
 
 void Board::RemoveCard(int index)
 {
-	_currentCards.erase(_currentCards.begin() + (index - 1));
+	if (index - 1 < _currentCards.size())
+		_currentCards.erase(_currentCards.begin() + (index - 1));
 }
 
 void Board::SetHadAttack(bool newState)
