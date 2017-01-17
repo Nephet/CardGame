@@ -25,7 +25,11 @@ void CardDealer::CreateCards(int nbToCreate, unsigned int seed)
 		int randMana = std::rand() % (5);
 
 		Card* c = new Card(randAttack, randDefense, randMana);
-		Card* c2 = new Card(randAttack, randDefense, randMana);
+
+		int randAttackBis = std::rand() % (_attackMax + 1);
+		int randDefenseBis = std::rand() % (_defenseMax + 1);
+		int randManaBis = std::rand() % (5);
+		Card* c2 = new Card(randAttackBis, randDefenseBis, randManaBis);
 
 		_cards->push_back(c);
 		_cards->push_back(c2);
